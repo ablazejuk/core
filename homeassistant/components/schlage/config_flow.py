@@ -33,7 +33,7 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self._show_user_form({})
-        username = user_input[CONF_USERNAME]
+        username = user_input[CONF_USERNAME].lower()
         password = user_input[CONF_PASSWORD]
         user_id, errors = await self.hass.async_add_executor_job(
             _authenticate, username, password
@@ -42,7 +42,13 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_user_form(errors)
 
         await self.async_set_unique_id(user_id)
-        return self.async_create_entry(title=username, data=user_input)
+        return self.async_create_entry(
+            title=username,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            },
+        )
 
     def _show_user_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         """Show the user form."""
@@ -67,7 +73,7 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_reauth_form({})
 
-        username = self.reauth_entry.data[CONF_USERNAME]
+        username = self.reauth_entry.data[CONF_USERNAME].lower()
         password = user_input[CONF_PASSWORD]
         user_id, errors = await self.hass.async_add_executor_job(
             _authenticate, username, password
